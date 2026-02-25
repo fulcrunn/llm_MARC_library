@@ -1,8 +1,8 @@
 # Core ML/AI libraries
 transformers==4.38.2           # Hugging Face transformers library
-accelerate==0.34.2             # Accelerate for distributed training
-peft==0.13.2                   # Parameter-Efficient Fine-Tuning
-trl==0.9.6                     # Transformer Reinforcement Learning
+accelerate==0.27.2             # Accelerate for distributed training
+peft==0.10.0                   # Parameter-Efficient Fine-Tuning
+trl==0.8.6                     # Transformer Reinforcement Learning
 bitsandbytes==0.43.1           # 8-bit optimizers and quantization
 datasets                       # Hugging Face datasets library
 rich                           #
