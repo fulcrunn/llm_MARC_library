@@ -38,7 +38,7 @@ echo "⚡ Reinstalando bitsandbytes para garantir GPU..."
 pip install --force-reinstall bitsandbytes==0.43.1
 
 echo "⚡ Instalando flash-attn (pode levar ~70 min)..."
-MAX_JOBS=4 pip install flash-attn==2.5.7 --no-build-isolation
+MAX_JOBS=4 pip install flash-attn==2.5.7 --no-build-isolation --verbose
 
 # -------------------------------------------------
 # 🧪 TESTES
