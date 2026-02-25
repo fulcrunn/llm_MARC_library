@@ -25,14 +25,13 @@ MAX_JOBS=4 pip3 install flash-attn==2.6.3 --no-build-isolation --verbose
 echo "📚 Instalando dependências do projeto..."
 pip3 install -r requirements.txt
 
-echo "🔎 Testando dependências críticas..."
-python3 -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
-python3 -c "import transformers; print('Transformers:', transformers.__version__)"
-python3 -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
-python3 -c "import flash_attn; print('flash_attn OK')"
-
 echo "⬇ Baixando dataset..."
 gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
+
+echo "🔎 Testando dependências críticas..."
+
+echo "🔎 Testando Transformers..."
+python3 -c "import transformers; print('Transformers:', transformers.__version__)"
 
 echo "🔎 Testando Torch..."
 python -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
