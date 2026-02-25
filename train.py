@@ -9,6 +9,7 @@ from transformers import (
 )
 from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer
+from transformers.utils.import_utils import is_torch_fx_available
 
 # =====================================================
 # Configurações principais
