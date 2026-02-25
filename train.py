@@ -20,8 +20,8 @@ DATA_PATH = "train_dataset.jsonl"
 OUTPUT_DIR = "./outputs"
 
 MAX_SEQ_LENGTH = 1024
-BATCH_SIZE = 1
-GRAD_ACC = 8
+BATCH_SIZE = 3
+GRAD_ACC = 4
 LR = 2e-4
 EPOCHS = 3
 
@@ -80,7 +80,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 model = prepare_model_for_kbit_training(model)
 
-model.gradient_checkpointing_enable()
+#model.gradient_checkpointing_enable()
 model.config.use_cache = False
 
 #model = prepare_model_for_kbit_training(model)
