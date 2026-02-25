@@ -1,4 +1,5 @@
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import torch
 from datasets import load_dataset
 from transformers import (
@@ -20,8 +21,8 @@ DATA_PATH = "train_dataset.jsonl"
 OUTPUT_DIR = "./outputs"
 
 MAX_SEQ_LENGTH = 512
-BATCH_SIZE = 6
-GRAD_ACC = 4
+BATCH_SIZE = 10
+GRAD_ACC = 2
 LR = 2e-4
 EPOCHS = 3
 
@@ -67,7 +68,7 @@ print("Eval size:", len(dataset["test"]))
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_compute_dtype=torch.bfloat16,
     bnb_4bit_use_double_quant=True,
 )
 
@@ -131,6 +132,7 @@ training_args = TrainingArguments(
     lr_scheduler_type="cosine",
     report_to="none",
     dataloader_num_workers=12,
+    dataloader_pin_memory=True,
 )
 
 # =====================================================
@@ -146,6 +148,7 @@ trainer = SFTTrainer(
     max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
+    packing=True,
 )
 
 # =====================================================
