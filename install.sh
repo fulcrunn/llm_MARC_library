@@ -51,4 +51,10 @@ python -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
 echo "🔎 Testando flash-attn..."
 python -c "import flash_attn; print('flash_attn OK')"
 
+echo "📦 Instalando gdown..."
+pip install gdown
+
+echo "⬇ Baixando dataset..."
+gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
+
 echo "✅ Ambiente configurado com sucesso!"
