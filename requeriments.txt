@@ -4,7 +4,7 @@ accelerate==0.27.2             # Accelerate for distributed training
 peft==0.10.0                   # Parameter-Efficient Fine-Tuning
 trl==0.8.6                     # Transformer Reinforcement Learning
 bitsandbytes==0.43.1           # 8-bit optimizers and quantization
-flash-attn --no-build-isolation # Implementação CUDA ultra otimizada de atenção.
+#flash-attn --no-build-isolation # Implementação CUDA ultra otimizada de atenção.
 datasets                       # Hugging Face datasets library
 rich                           #
 
