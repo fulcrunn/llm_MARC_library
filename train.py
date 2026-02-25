@@ -4,6 +4,7 @@ from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
+    BitsAndBytesConfig,
     TrainingArguments,
 )
 from peft import LoraConfig, prepare_model_for_kbit_training
@@ -62,21 +63,21 @@ print("Eval size:", len(dataset["test"]))
 # Quantização 4-bit (QLoRA)
 # =====================================================
 
-'''
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.float16,
     bnb_4bit_use_double_quant=True,
 )
-'''
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    torch_dtype=torch.float16,
+    quantization_config=bnb_config,
     device_map="auto",
     trust_remote_code=True,
-).cuda()
+)
+
+model = prepare_model_for_kbit_training(model)
 
 model.gradient_checkpointing_enable()
 model.config.use_cache = False
@@ -139,8 +140,8 @@ trainer = SFTTrainer(
     train_dataset=dataset["train"],
     eval_dataset=dataset["test"],
     peft_config=peft_config,
-    dataset_text_field="text",
-    max_seq_length=MAX_SEQ_LENGTH,
+    #dataset_text_field="text",
+    #max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
 )
