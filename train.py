@@ -1,5 +1,7 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# Desabilita o wandb para evitar que o Pod congele esperando login no terminal
+os.environ["WANDB_DISABLED"] = "true" 
 
 import torch
 from datasets import load_dataset
@@ -17,16 +19,17 @@ from trl import SFTTrainer
 # =====================================================
 
 MODEL_NAME = "mistralai/Mistral-7B-v0.1"
-DATA_PATH = "train_dataset.jsonl"
-OUTPUT_DIR = "./outputs"
+# Permite sobrescrever o caminho do dataset via variável de ambiente no Pod
+DATA_PATH = os.getenv("DATA_PATH", "train_dataset.jsonl")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
-BATCH_SIZE = 12        # pode subir bem agora
+BATCH_SIZE = 12        
 GRAD_ACC = 2
 LR = 2e-4
 EPOCHS = 3
 
-assert torch.cuda.is_available()
+assert torch.cuda.is_available(), "Erro: GPU não está disponível neste Pod!"
 print("GPU:", torch.cuda.get_device_name(0))
 
 # =====================================================
@@ -40,6 +43,9 @@ tokenizer.padding_side = "right"
 # =====================================================
 # DATASET
 # =====================================================
+
+if not os.path.exists(DATA_PATH):
+    raise FileNotFoundError(f"Dataset não encontrado em: {DATA_PATH}")
 
 dataset = load_dataset("json", data_files=DATA_PATH, split="train")
 dataset = dataset.train_test_split(test_size=0.05)
@@ -73,7 +79,7 @@ model.config.use_cache = False
 # =====================================================
 
 peft_config = LoraConfig(
-    r=32,                     # aumentamos rank
+    r=32,                     
     lora_alpha=32,
     lora_dropout=0.05,
     bias="none",
@@ -101,12 +107,12 @@ training_args = TrainingArguments(
     num_train_epochs=EPOCHS,
     logging_steps=50,
     save_strategy="epoch",
-    evaluation_strategy="no",     # 🔥 remove gargalo
+    eval_strategy="no",           # Substituído evaluation_strategy por eval_strategy (aviso de depreciação nas novas versões do transformers)
     bf16=True,
     warmup_ratio=0.05,
     lr_scheduler_type="cosine",
-    report_to="none",
-    dataloader_num_workers=12,
+    report_to="none",             # Garante que não tentará enviar logs para plataformas externas
+    dataloader_num_workers=os.cpu_count() or 4, # Usa os núcleos disponíveis no Pod
     dataloader_pin_memory=True,
 )
 
@@ -122,16 +128,17 @@ trainer = SFTTrainer(
     max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
-    packing=True,               # 🔥 grande ganho
+    packing=True,               
 )
 
 # =====================================================
 # TRAIN
 # =====================================================
 
+print("Iniciando o treinamento no Pod...")
 trainer.train()
 
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
 
-print("Treino concluído!")
+print("Treino concluído e modelo salvo com sucesso!")

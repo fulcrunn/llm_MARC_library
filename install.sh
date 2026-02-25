@@ -1,60 +1,33 @@
 #!/bin/bash
 set -e
 
-echo "🔄 Atualizando sistema..."
-apt update
-
-echo "📦 Instalando dependências do sistema..."
-apt install -y git python3 python3-venv ninja-build build-essential
-
-echo "📥 Clonando repositório..."
-if [ ! -d "llm_MARC_library" ]; then
-    git clone https://github.com/fulcrunn/llm_MARC_library.git
-fi
-
-cd llm_MARC_library/
-
-echo "🐍 Criando ambiente virtual..."
-python3 -m venv venv
-source venv/bin/activate
+echo "🔄 Atualizando sistema e instalando dependências base..."
+# Executado como root, comum em Pods
+apt-get update
+apt-get install -y git python3-pip python3-dev ninja-build build-essential wget
 
 echo "⬆ Atualizando pip..."
-pip install --upgrade pip
+pip3 install --upgrade pip
 
 echo "🔥 Instalando PyTorch 2.2.0 (CUDA 12.1)..."
-pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cu121
-
-echo "📦 Instalando Triton compatível..."
-pip install triton==2.2.0
-
-echo "📦 Instalando NumPy compatível..."
-pip install numpy==1.26.4
-
-echo "📚 Instalando dependências do projeto..."
-pip install -r requirements.txt
-
-echo "⚡ Instalando bitsandbytes compatível..."
-pip install bitsandbytes==0.42.0 --verbose
+# Instalado separadamente para garantir a versão correta do CUDA antes dos outros pacotes
+pip3 install torch==2.2.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 echo "⚡ Instalando flash-attn..."
-MAX_JOBS=4 pip install flash-attn==2.5.7 --no-build-isolation --verbose
+# Instalar packaging e ninja antes previne erros de compilação no flash-attn
+pip3 install packaging ninja
+MAX_JOBS=4 pip3 install flash-attn==2.5.7 --no-build-isolation --verbose
 
-echo "🔎 Testando Torch..."
-python -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
+echo "📚 Instalando dependências do projeto..."
+pip3 install -r requirements.txt
 
-echo "🔎 Testando Triton..."
-python -c "import triton; print('Triton:', triton.__version__)"
-
-echo "🔎 Testando bitsandbytes..."
-python -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
-
-echo "🔎 Testando flash-attn..."
-python -c "import flash_attn; print('flash_attn OK')"
-
-echo "📦 Instalando gdown..."
-pip install gdown
+echo "🔎 Testando dependências críticas..."
+python3 -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
+python3 -c "import triton; print('Triton:', triton.__version__)"
+python3 -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
+python3 -c "import flash_attn; print('flash_attn OK')"
 
 echo "⬇ Baixando dataset..."
 gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
 
-echo "✅ Ambiente configurado com sucesso!"
+echo "✅ Pod configurado com sucesso!"
