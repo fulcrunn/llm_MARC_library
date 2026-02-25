@@ -141,8 +141,8 @@ trainer = SFTTrainer(
     train_dataset=dataset["train"],
     eval_dataset=dataset["test"],
     peft_config=peft_config,
-    #dataset_text_field="text",
-    #max_seq_length=MAX_SEQ_LENGTH,
+    dataset_text_field="text",
+    max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
 )
