@@ -4,7 +4,6 @@ from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
-    BitsAndBytesConfig,
     TrainingArguments,
 )
 from peft import LoraConfig, prepare_model_for_kbit_training
@@ -19,7 +18,7 @@ DATA_PATH = "train_dataset.jsonl"
 OUTPUT_DIR = "./outputs"
 
 MAX_SEQ_LENGTH = 1024
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 GRAD_ACC = 8
 LR = 2e-4
 EPOCHS = 3
@@ -74,12 +73,15 @@ bnb_config = BitsAndBytesConfig(
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    device_map=None,
     torch_dtype=torch.float16,
+    device_map="auto",
     trust_remote_code=True,
 ).cuda()
 
-model = prepare_model_for_kbit_training(model)
+model.gradient_checkpointing_enable()
+model.config.use_cache = False
+
+#model = prepare_model_for_kbit_training(model)
 
 # =====================================================
 # LoRA
