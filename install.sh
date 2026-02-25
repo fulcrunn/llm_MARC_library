@@ -12,6 +12,7 @@ if [ ! -d "llm_MARC_library" ]; then
     git clone https://github.com/fulcrunn/llm_MARC_library.git
 fi
 
+echo "📂 Acessando diretório do projeto..."
 cd llm_MARC_library/
 
 echo "🐍 Criando ambiente virtual..."
