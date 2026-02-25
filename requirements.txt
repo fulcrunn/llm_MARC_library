@@ -1,15 +1,16 @@
-# Core ML/AI libraries
-transformers==4.38.2        # Hugging Face Transformers for NLP models
-accelerate==0.27.2      # Hugging Face Accelerate for distributed training
-peft==0.10.0       # Parameter-Efficient Fine-Tuning library
-trl==0.8.6      # Transformers Reinforcement Learning for training with RLHF
-bitsandbytes==0.43.1    # 8-bit optimizers and quantization
-datasets        # Hugging Face Datasets for loading and processing datasets
-rich    # Rich library for beautiful terminal output
-wheel   # Wheel for building and installing Python packages
+# ===== CORE ML =====
+numpy==1.26.4
+transformers==4.38.2
+accelerate==0.27.2
+peft==0.10.0
+trl==0.8.6
+bitsandbytes==0.43.1
+datasets
+rich
+wheel
 
-# Document processing libraries
-pymarc # Library for working with MARC records
-pymupdf # Library for working with PDF files
-python-docx # Library for working with Word documents
-lxml # Library for processing XML and HTML documents
+# ===== DOCUMENT PROCESSING =====
+pymarc
+pymupdf
+python-docx
+lxml
