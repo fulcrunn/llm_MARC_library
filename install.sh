@@ -34,10 +34,10 @@ echo "📚 Instalando dependências do projeto..."
 pip install -r requirements.txt
 
 echo "⚡ Instalando bitsandbytes compatível..."
-pip install bitsandbytes==0.42.0
+pip install bitsandbytes==0.42.0 --verbose
 
 echo "⚡ Instalando flash-attn..."
-MAX_JOBS=4 pip install flash-attn==2.5.7 --no-build-isolation
+MAX_JOBS=4 pip install flash-attn==2.5.7 --no-build-isolation --verbose
 
 echo "🔎 Testando Torch..."
 python -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
