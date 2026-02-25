@@ -87,12 +87,26 @@ model.config.use_cache = False
 # LoRA
 # =====================================================
 
+# Imprime os nomes dos módulos para verificar quais são os alvos corretos para LoRA
+for name, module in model.named_modules():
+    if "proj" in name:
+        print(name)
+
 peft_config = LoraConfig(
     r=16,
     lora_alpha=16,
     lora_dropout=0.05,
     bias="none",
     task_type="CAUSAL_LM",
+    target_modules=[
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+    ],
 )
 
 # =====================================================
@@ -108,7 +122,7 @@ training_args = TrainingArguments(
     num_train_epochs=EPOCHS,
     logging_steps=50,
     save_strategy="epoch",
-    evaluation_strategy="steps",
+    eval_strategy="steps",
     eval_steps=200,
     fp16=True,
     warmup_ratio=0.05,
