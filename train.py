@@ -74,10 +74,10 @@ bnb_config = BitsAndBytesConfig(
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    device_map="auto",
+    device_map=None,
     torch_dtype=torch.float16,
     trust_remote_code=True,
-)
+).cuda()
 
 model = prepare_model_for_kbit_training(model)
 
