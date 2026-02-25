@@ -1,5 +1,6 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import torch
 from datasets import load_dataset
 from transformers import (
@@ -10,59 +11,44 @@ from transformers import (
 )
 from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer
-from transformers.utils.import_utils import is_torch_fx_available
 
 # =====================================================
-# Configurações principais
+# CONFIG
 # =====================================================
 
-MODEL_NAME = "deepseek-ai/DeepSeek-V2-Lite"
+MODEL_NAME = "mistralai/Mistral-7B-v0.1"
 DATA_PATH = "train_dataset.jsonl"
 OUTPUT_DIR = "./outputs"
 
 MAX_SEQ_LENGTH = 512
-BATCH_SIZE = 10
+BATCH_SIZE = 12        # pode subir bem agora
 GRAD_ACC = 2
 LR = 2e-4
 EPOCHS = 3
 
-# =====================================================
-# Verificação GPU
-# =====================================================
-
-assert torch.cuda.is_available(), "CUDA não está disponível!"
+assert torch.cuda.is_available()
 print("GPU:", torch.cuda.get_device_name(0))
 
 # =====================================================
-# Tokenizer
+# TOKENIZER
 # =====================================================
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_NAME,
-    trust_remote_code=True,
-    use_fast=True
-)
-
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
 # =====================================================
-# Dataset
+# DATASET
 # =====================================================
 
-dataset = load_dataset(
-    "json",
-    data_files=DATA_PATH,
-    split="train"
-)
-
+dataset = load_dataset("json", data_files=DATA_PATH, split="train")
 dataset = dataset.train_test_split(test_size=0.05)
 
-print("Train size:", len(dataset["train"]))
-print("Eval size:", len(dataset["test"]))
+print("Train:", len(dataset["train"]))
+print("Eval:", len(dataset["test"]))
 
 # =====================================================
-# Quantização 4-bit (QLoRA)
+# QLoRA CONFIG
 # =====================================================
 
 bnb_config = BitsAndBytesConfig(
@@ -76,28 +62,19 @@ model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     quantization_config=bnb_config,
     device_map="auto",
-    trust_remote_code=True,
 )
 
 model = prepare_model_for_kbit_training(model)
-
 model.gradient_checkpointing_enable()
 model.config.use_cache = False
-
-#model = prepare_model_for_kbit_training(model)
 
 # =====================================================
 # LoRA
 # =====================================================
 
-# Imprime os nomes dos módulos para verificar quais são os alvos corretos para LoRA
-for name, module in model.named_modules():
-    if "proj" in name:
-        print(name)
-
 peft_config = LoraConfig(
-    r=16,
-    lora_alpha=16,
+    r=32,                     # aumentamos rank
+    lora_alpha=32,
     lora_dropout=0.05,
     bias="none",
     task_type="CAUSAL_LM",
@@ -108,25 +85,23 @@ peft_config = LoraConfig(
         "o_proj",
         "gate_proj",
         "up_proj",
-        "down_proj"
+        "down_proj",
     ],
 )
 
 # =====================================================
-# Training arguments
+# TRAINING ARGS
 # =====================================================
 
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=BATCH_SIZE,
-    per_device_eval_batch_size=BATCH_SIZE,
     gradient_accumulation_steps=GRAD_ACC,
     learning_rate=LR,
     num_train_epochs=EPOCHS,
     logging_steps=50,
     save_strategy="epoch",
-    evaluation_strategy="steps",
-    eval_steps=200,
+    evaluation_strategy="no",     # 🔥 remove gargalo
     bf16=True,
     warmup_ratio=0.05,
     lr_scheduler_type="cosine",
@@ -136,30 +111,25 @@ training_args = TrainingArguments(
 )
 
 # =====================================================
-# Trainer
+# TRAINER
 # =====================================================
 
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset["train"],
-    eval_dataset=dataset["test"],
     peft_config=peft_config,
     dataset_text_field="text",
     max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
-    packing=True,
+    packing=True,               # 🔥 grande ganho
 )
 
 # =====================================================
-# Treino
+# TRAIN
 # =====================================================
 
 trainer.train()
-
-# =====================================================
-# Salvar modelo LoRA
-# =====================================================
 
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
