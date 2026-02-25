@@ -1,0 +1,13 @@
+# Core ML/AI libraries
+transformers==4.46.3           # Hugging Face transformers library
+accelerate==0.34.2             # Accelerate for distributed training
+peft==0.13.2                   # Parameter-Efficient Fine-Tuning
+trl==0.9.6                     # Transformer Reinforcement Learning
+bitsandbytes==0.45.2           # 8-bit optimizers and quantization
+datasets                       # Hugging Face datasets library
+
+# Document processing libraries
+pymarc                         # MARC21 record processing
+pymupdf                        # PDF processing (also import as fitz)
+python-docx                    # Microsoft Word document processing
+lxml                           # XML/HTML parsing (useful for MARCXML)
