@@ -19,8 +19,8 @@ MODEL_NAME = "deepseek-ai/DeepSeek-V2-Lite"
 DATA_PATH = "train_dataset.jsonl"
 OUTPUT_DIR = "./outputs"
 
-MAX_SEQ_LENGTH = 1024
-BATCH_SIZE = 3
+MAX_SEQ_LENGTH = 512
+BATCH_SIZE = 6
 GRAD_ACC = 4
 LR = 2e-4
 EPOCHS = 3
@@ -80,7 +80,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 model = prepare_model_for_kbit_training(model)
 
-#model.gradient_checkpointing_enable()
+model.gradient_checkpointing_enable()
 model.config.use_cache = False
 
 #model = prepare_model_for_kbit_training(model)
@@ -126,10 +126,11 @@ training_args = TrainingArguments(
     save_strategy="epoch",
     evaluation_strategy="steps",
     eval_steps=200,
-    fp16=True,
+    bf16=True,
     warmup_ratio=0.05,
     lr_scheduler_type="cosine",
     report_to="none",
+    dataloader_num_workers=12,
 )
 
 # =====================================================
