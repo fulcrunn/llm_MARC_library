@@ -10,30 +10,40 @@ if [ ! -d "llm_MARC_library" ]; then
     git clone https://github.com/fulcrunn/llm_MARC_library.git
 fi
 
-# Entrando na pasta do projeto recém-clonado
 cd llm_MARC_library/
 
 echo "⬆ Atualizando pip..."
 pip3 install --upgrade pip
 
-echo "🔥 Instalando PyTorch 2.2.0 (CUDA 12.1)..."
-pip3 install torch==2.2.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+echo "🔥 Instalando PyTorch 2.4.1 (CUDA 12.1)..."
+pip3 install torch==2.4.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 echo "⚡ Instalando flash-attn..."
 pip3 install packaging ninja
-MAX_JOBS=4 pip3 install flash-attn==2.5.7 --no-build-isolation --verbose
+MAX_JOBS=4 pip3 install flash-attn==2.6.3 --no-build-isolation --verbose
 
 echo "📚 Instalando dependências do projeto..."
-# Agora ele vai encontrar o requirements.txt corretamente
 pip3 install -r requirements.txt
 
 echo "🔎 Testando dependências críticas..."
 python3 -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
-python3 -c "import triton; print('Triton:', triton.__version__)"
+python3 -c "import transformers; print('Transformers:', transformers.__version__)"
 python3 -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
 python3 -c "import flash_attn; print('flash_attn OK')"
 
 echo "⬇ Baixando dataset..."
 gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
+
+echo "🔎 Testando Torch..."
+python -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
+
+echo "🔎 Testando Triton..."
+python -c "import triton; print('Triton:', triton.__version__)"
+
+echo "🔎 Testando bitsandbytes..."
+python -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
+
+echo "🔎 Testando flash-attn..."
+python -c "import flash_attn; print('flash_attn OK')"
 
 echo "✅ Pod configurado com sucesso!"

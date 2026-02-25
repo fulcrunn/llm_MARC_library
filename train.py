@@ -1,6 +1,5 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-# Desabilita o wandb para evitar que o Pod congele esperando login no terminal
 os.environ["WANDB_DISABLED"] = "true" 
 
 import torch
@@ -19,7 +18,6 @@ from trl import SFTTrainer
 # =====================================================
 
 MODEL_NAME = "mistralai/Mistral-7B-v0.1"
-# Permite sobrescrever o caminho do dataset via variável de ambiente no Pod
 DATA_PATH = os.getenv("DATA_PATH", "train_dataset.jsonl")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
@@ -29,14 +27,15 @@ GRAD_ACC = 2
 LR = 2e-4
 EPOCHS = 3
 
-assert torch.cuda.is_available(), "Erro: GPU não está disponível neste Pod!"
+assert torch.cuda.is_available(), "Erro: GPU não está disponível!"
 print("GPU:", torch.cuda.get_device_name(0))
 
 # =====================================================
 # TOKENIZER
 # =====================================================
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+# O use_fast=False previne erros de parse no JSON do tokenizer do Mistral
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_fast=False)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
@@ -107,12 +106,12 @@ training_args = TrainingArguments(
     num_train_epochs=EPOCHS,
     logging_steps=50,
     save_strategy="epoch",
-    eval_strategy="no",           # Substituído evaluation_strategy por eval_strategy (aviso de depreciação nas novas versões do transformers)
+    eval_strategy="no",           
     bf16=True,
     warmup_ratio=0.05,
     lr_scheduler_type="cosine",
-    report_to="none",             # Garante que não tentará enviar logs para plataformas externas
-    dataloader_num_workers=os.cpu_count() or 4, # Usa os núcleos disponíveis no Pod
+    report_to="none",             
+    dataloader_num_workers=os.cpu_count() or 4, 
     dataloader_pin_memory=True,
 )
 
