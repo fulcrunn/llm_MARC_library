@@ -1,4 +1,5 @@
 import torch
+import re
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 
@@ -6,7 +7,7 @@ from peft import PeftModel
 # 1. CONFIGURAÇÕES
 # =====================================================
 BASE_MODEL = "mistralai/Mistral-7B-v0.1"
-ADAPTER_DIR = "./outputs"  # Pasta onde estão os arquivos salvos pelo treinamento
+ADAPTER_DIR = "./outputs"  
 
 # =====================================================
 # 2. CARREGAR TOKENIZADOR E MODELO BASE
@@ -27,16 +28,50 @@ base_model = AutoModelForCausalLM.from_pretrained(
 )
 
 # =====================================================
-# 3. VESTIR O MODELO (FUSÃO)
+# 3. VESTIR O MODELO 
 # =====================================================
 print("Injetando o adaptador MARC21 no cérebro do Mistral...")
 model = PeftModel.from_pretrained(base_model, ADAPTER_DIR)
 
 # =====================================================
-# 4. PREPARAR A PERGUNTA (PROMPT)
+# 4. FUNÇÃO DE FORMATAÇÃO VISUAL
 # =====================================================
-# IMPORTANTE: A formatação e as tags <|im_start|> devem ser 
-# rigorosamente iguais ao que você usou no preparation.py
+def formatar_marc_personalizado(texto_marc):
+    """
+    Converte o formato padrão gerado pelo modelo (baseado no str do pymarc)
+    para o formato visual solicitado pelo usuário com pipes (|) e underlines (_).
+    """
+    linhas = texto_marc.strip().split('\n')
+    resultado = []
+    
+    for linha in linhas:
+        if not linha.strip():
+            continue
+            
+        # 1. Remove o '=' inicial do pymarc, se existir
+        if linha.startswith('='):
+            linha = linha[1:]
+            
+        # 2. Substitui o separador de subcampo ($) pelo pipe (|)
+        linha = linha.replace('$', ' |')
+        
+        # 3. Trata os indicadores (posição 4 e 5 da string)
+        if len(linha) >= 6 and linha[0:3].isdigit():
+            tag = linha[0:3]
+            # Campos de controle (00X) não têm indicadores
+            if not tag.startswith('00'):
+                # Extrai os indicadores e substitui contra-barras ou espaços vazios por '_'
+                indicadores = linha[4:6].replace('\\', '_').replace('  ', '__').replace(' ', '_')
+                # Reconstrói a linha com os novos indicadores
+                linha = linha[:4] + indicadores + linha[6:]
+                
+        resultado.append(linha)
+        
+    return '\n'.join(resultado)
+
+# =====================================================
+# 5. PREPARAR A PERGUNTA (PROMPT)
+# =====================================================
 prompt = """<|im_start|>user
 Você é um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogação do SiBi/UFPR versão 2025.
 
@@ -63,14 +98,13 @@ Assuntos: Literatura Fantástica; Ficção
 <|im_start|>assistant
 """
 
-# Converter o texto para tensores e enviar para a GPU
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
 
 # =====================================================
-# 5. GERAR O REGISTRO
+# 6. GERAR E FORMATAR O REGISTRO
 # =====================================================
 print("\nGerando registro MARC21...\n")
-# Temperature baixa (0.1) faz o modelo ser mais robótico, preciso e menos "criativo", ideal para catalogação
+
 outputs = model.generate(
     **inputs, 
     max_new_tokens=400, 
@@ -79,8 +113,11 @@ outputs = model.generate(
     pad_token_id=tokenizer.eos_token_id
 )
 
-# Decodificar e cortar o prompt da resposta final
 resposta_completa = tokenizer.decode(outputs[0], skip_special_tokens=True)
-registro_marc = resposta_completa.split("<|im_start|>assistant")[-1].strip()
+texto_bruto_gerado = resposta_completa.split("<|im_start|>assistant")[-1].strip()
 
-print(registro_marc)
+# Aplica a nossa formatação customizada
+registro_final = formatar_marc_personalizado(texto_bruto_gerado)
+
+print("=== REGISTRO MARC GERADO E FORMATADO ===")
+print(registro_final)

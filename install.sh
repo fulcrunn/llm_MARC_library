@@ -45,4 +45,7 @@ python -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
 echo "🔎 Testando flash-attn..."
 python -c "import flash_attn; print('flash_attn OK')"
 
+echo "📚 Install tmux"
+apt-get install -y tmux
+
 echo "✅ Pod configurado com sucesso!"
