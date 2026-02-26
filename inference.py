@@ -74,16 +74,16 @@ Regras obrigatórias:
 - Notas (5XX): seguir exemplos do manual (502 para teses, 520 para resumos, 591 para notas locais, etc.)
 - Subjects (650): usar LCSH da LC
 
-Deixe os assuntos em português.
+Adicione as demais tags conforme o Manual de Catalogação do SIBI/UFPR, mas siga as regras acima à risca.
+Deixe os assuntos do campo 650 em português. 
 Gere o registro MARC21 para este livro aplicando todas as regras acima. 
 IMPORTANTE: Utilize APENAS os dados fornecidos abaixo. Não invente ISBN, paginação ou classificações que não estejam na lista.
 
-Título completo: O Senhor dos Anéis : A Sociedade do Anel
-Autor: Tolkien, J. R. R.
-Ano: 2020
-Edição: 1
-Imprenta: São Paulo : Martins Fontes, 2020
-Assuntos: Literatura Fantástica; Ficção
+Título completo: O segredo de Luísa
+Autor: Fernando Dolabela
+Ano: 2008
+Imprenta: São Paulo : Sextante, 2008
+
 
 Responda **APENAS** com o registro MARC completo (todos os campos necessários, com indicadores e subcampos exatos).
 <|im_end|>
