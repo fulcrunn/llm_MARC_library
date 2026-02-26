@@ -75,7 +75,8 @@ Regras obrigatórias:
 - Subjects (650): usar LCSH da LC
 
 Deixe os assuntos em português.
-Gere o registro MARC21 completo para este livro aplicando todas as regras acima:
+Gere o registro MARC21 para este livro aplicando todas as regras acima. 
+IMPORTANTE: Utilize APENAS os dados fornecidos abaixo. Não invente ISBN, paginação ou classificações que não estejam na lista.
 
 Título completo: O Senhor dos Anéis : A Sociedade do Anel
 Autor: Tolkien, J. R. R.
@@ -98,7 +99,7 @@ inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
 
 outputs = model.generate(
     **inputs, 
-    max_new_tokens=400, 
+    max_new_tokens=800,  
     temperature=0.1, 
     do_sample=True,
     pad_token_id=tokenizer.eos_token_id
