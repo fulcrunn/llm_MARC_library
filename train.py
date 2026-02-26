@@ -8,10 +8,9 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     BitsAndBytesConfig,
-    TrainingArguments,
 )
 from peft import LoraConfig, prepare_model_for_kbit_training
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 
 # =====================================================
 # CONFIG
@@ -22,8 +21,10 @@ DATA_PATH = os.getenv("DATA_PATH", "train_dataset.jsonl")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
-BATCH_SIZE = 12        
-GRAD_ACC = 2
+# Aumentamos o Batch Size para saturar a RTX 3090 (usar ~90% da VRAM)
+BATCH_SIZE = 24        
+# Reduzimos o Grad Acc, já que o batch size dobrou
+GRAD_ACC = 1           
 LR = 2e-4
 EPOCHS = 3
 
@@ -34,7 +35,6 @@ print("GPU:", torch.cuda.get_device_name(0))
 # TOKENIZER
 # =====================================================
 
-# O use_fast=False previne erros de parse no JSON do tokenizer do Mistral
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_fast=False)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
@@ -53,7 +53,7 @@ print("Train:", len(dataset["train"]))
 print("Eval:", len(dataset["test"]))
 
 # =====================================================
-# QLoRA CONFIG
+# QLoRA CONFIG & MODEL
 # =====================================================
 
 bnb_config = BitsAndBytesConfig(
@@ -67,6 +67,8 @@ model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     quantization_config=bnb_config,
     device_map="auto",
+    # 🔥 A MÁGICA ACONTECE AQUI: Ativa o Flash Attention 2
+    attn_implementation="flash_attention_2" 
 )
 
 model = prepare_model_for_kbit_training(model)
@@ -95,10 +97,12 @@ peft_config = LoraConfig(
 )
 
 # =====================================================
-# TRAINING ARGS
+# TRAINING ARGS (Agora usando SFTConfig)
 # =====================================================
 
-training_args = TrainingArguments(
+# O SFTConfig substitui o TrainingArguments e herda todos os parâmetros dele,
+# mas também aceita os parâmetros específicos do SFTTrainer (packing, max_seq_length, etc)
+training_args = SFTConfig(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=BATCH_SIZE,
     gradient_accumulation_steps=GRAD_ACC,
@@ -113,6 +117,14 @@ training_args = TrainingArguments(
     report_to="none",             
     dataloader_num_workers=os.cpu_count() or 4, 
     dataloader_pin_memory=True,
+    
+    # Otimizador em 8-bit é mais rápido e gasta menos VRAM
+    optim="adamw_8bit",
+    
+    # Parâmetros que antes iam no SFTTrainer agora vêm aqui
+    max_seq_length=MAX_SEQ_LENGTH,
+    dataset_text_field="text",
+    packing=True,
 )
 
 # =====================================================
@@ -123,18 +135,15 @@ trainer = SFTTrainer(
     model=model,
     train_dataset=dataset["train"],
     peft_config=peft_config,
-    dataset_text_field="text",
-    max_seq_length=MAX_SEQ_LENGTH,
     tokenizer=tokenizer,
     args=training_args,
-    packing=True,               
 )
 
 # =====================================================
 # TRAIN
 # =====================================================
 
-print("Iniciando o treinamento no Pod...")
+print("Iniciando o treinamento turbinado no Pod...")
 trainer.train()
 
 trainer.model.save_pretrained(OUTPUT_DIR)

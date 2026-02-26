@@ -7,6 +7,8 @@ trl==0.10.1
 datasets
 rich
 wheel
+sentencepiece
+protobuf
 
 # ===== OTIMIZAÇÕES E LLM =====
 bitsandbytes
