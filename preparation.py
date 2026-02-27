@@ -6,6 +6,7 @@ import fitz  # PyMuPDF para PDF
 from docx import Document
 from tqdm import tqdm
 
+
 # ==================== CONFIG ====================
 MARC_FOLDER = '/dataset/chunk/'
 PDF_FOLDER  = '/dataset/pdfs_catalogacao/'
@@ -14,7 +15,7 @@ OUTPUT_JSONL = '/dataset/train_dataset.jsonl'
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
-MAX_RECORDS = 10000   # aumente depois que testar
+MAX_RECORDS = 50000   # aumente depois que testar
 # ===============================================
 data = []
 
@@ -132,7 +133,7 @@ for filename in os.listdir(MARC_FOLDER):
                 return
             data.append(format_marc_record(record))
             count += 1
-            if count % 10000 == 0:
+            if count % MAX_RECORDS == 0:
                 print(f"  → {count} registros processados")
 
         map_xml(process_record, path)  # streaming perfeito para arquivos grandes!
