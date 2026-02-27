@@ -20,8 +20,30 @@ data = []
 
 # ==================== 1. PROCESSAMENTO DOS REGISTROS MARC ====================
 def format_marc_record(record):
-    # === EXTRAÇÃO ENRIQUECIDA (conforme manual UFPR) ===
-    # Título 245 a/b/c
+    # === Extração do Autor e Data Augmentation (Truque da Inversão) ===
+    author_prompt = ''
+    author_field = record.get('100')
+    # === Extração do Autor e Data Augmentation (50/50) ===
+    author_prompt = ''
+    author_field = record.get('100')
+    if author_field:
+        a = author_field.get('a', '')
+        c = author_field.get('c', '')
+        q = author_field.get('q', '')
+        d = author_field.get('d', '')
+        
+        # O autor completo na ordem que está no MARC (ex: Silva, Mario)
+        author_original = f"{a} {c} {q} {d}".strip().replace('  ', ' ')
+        author_prompt = author_original
+        
+        # Joga uma moeda: 50% de chance de "desinverter" o nome no prompt
+        if ',' in a and random.choice([True, False]):
+            partes = a.split(',', 1)
+            sobrenome = partes[0].strip()
+            nome = partes[1].strip()
+            author_prompt = f"{nome} {sobrenome} {c} {q} {d}".strip().replace('  ', ' ')
+
+    # === Título 245 a/b/c ===
     title_field = record.get('245')
     title = title_field.get('a', 'Sem título') if title_field else 'Sem título'
     subtitle = title_field.get('b', '') if title_field else ''
@@ -33,34 +55,14 @@ def format_marc_record(record):
     if responsibility:
         full_title += f" / {responsibility}"
 
-    # Autor 100 (subcampos que você mencionou: a, c, q, d)
-    author = ''
-    author_field = record.get('100')
-    if author_field:
-        a = author_field.get('a', '')
-        c = author_field.get('c', '')
-        q = author_field.get('q', '')
-        d = author_field.get('d', '')
-        author = f"{a} {c} {q} {d}".strip().replace('  ', ' ')
-
-    # Ano (prioriza 260, fallback 264)
+    # === Ano (prioriza 260, fallback 264) ===
     year = ''
     if record.get('260') and 'c' in record['260']:
         year = record['260']['c']
     elif record.get('264') and 'c' in record['264']:
         year = record['264']['c']
 
-    # Subjects 650
-    subjects = ''
-    subject_field = record.get('650')
-    if subject_field: #'a', 'x', 'z', 'y']
-      a = subject_field.get('a','')
-      x = subject_field.get('x','')
-      z = subject_field.get('z','')
-      y = subject_field.get('y','')
-      subject = f"{a}; {x}; {z}; {y}".strip().replace('  ',' ')
-
-    # Extras úteis (edição e imprenta)
+    # === Extras úteis (edição e imprenta) ===
     edition = record['250'].get('a', '') if record.get('250') else ''
     imprint = ''
     if record.get('260'):
@@ -72,29 +74,40 @@ def format_marc_record(record):
         pub = record['264'].get('b', '')
         imprint = f"{loc} : {pub}, {year}".strip(' :,')
 
-    # === PROMPT COM REGRAS DO MANUAL 2025 ===
+    # === PROMPT COM TODAS AS REGRAS UFPR 2025 ===
     prompt = f"""<|im_start|>user
 Você é um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogação do SiBi/UFPR versão 2025.
 
 Regras obrigatórias:
-- Campo 040: sempre 040 ## |a BR-CuUPA |b por |c BR-CuUPA
-- 245: nunca usar subcampo |h (DGM) para livros impressos
-- 250 (edição): ignorar reimpressões; só registrar 1ª edição se aparecer explicitamente
-- 260/264 (imprenta): usar [S.l.] quando não houver local, [s.n.] quando não houver editora; datas aproximadas entre colchetes [19--], [201-], etc.
-- Autoridades (100/110/111): usar subcampos a, c, q, d conforme forma autorizada
-- Título (245): transcrever exatamente a/b/c, sem pontuação extra dentro dos subcampos
-- Notas (5XX): seguir exemplos do manual (502 para teses, 520 para resumos, 591 para notas locais, etc.)
-- Subjects (650): usar LCSH da LC
+  tag indicador 1 indicador 2: descrição da tag
+- 090 0 ?: código de classificação, usar Classificação Decimal de Dewey (CDD) ou Classificação Decimal Universal (CDU) conforme disponível; se ambos, priorizar CDD  
+- 100 ? ?: usar subcampos a, c, q, d conforme forma autorizada; se autor corporativo, usar 110 ou 111
+- 240 ? ?: usar para títulos uniformes, com subcampo a para título e subcampo d para data de criação (ex: "Brasil. Ministério da Educação. Secretaria de Educação Superior. Universidade Federal do Paraná. Setor de Ciências Humanas, Letras e Artes. Departamento de História. Curso de História.")
+- 245 ? ?: título principal no subcampo a, subtítulo no subcampo b, responsabilidade no subcampo c; transcrever exatamente sem pontuação extra
+- 250 ? ?: edição ignorar reimpressões; só registrar 1ª edição se aparecer explicitamente
+- 260/264 ? ?: impreta, usar [S.l.] quando não houver local, [s.n.] quando não houver editora; datas aproximadas entre colchetes [19--], [201-], etc.
+- 300 ? ?: descrição física, usar subcampos a para extensão (ex: "300 p."), b para ilustrações (ex: "il.") e c para dimensões (ex: "21 cm")
+- 490 0 ?: série, usar subcampo a para título da série e subcampo v para número da série (ex: "490 0 $a Coleção UFPR. $v 10")
+- 500 ? ?: notas gerais, usar subcampo a para texto da nota (ex: "500 $a Inclui bibliografia.")
+- 504 ? ?: bibliografia, usar subcampo a para texto da nota (ex: "504 $a Bibliografia: p. 290-300.")
+- 505 ? ?: sumário, usar subcampo a para texto do sumário (ex: "505 $a Capítulo 1: Introdução -- Capítulo 2: Metodologia.")
+- 590 ? ?: notas locais, usar subcampo a para texto da nota (ex: "590 $a Exemplar disponível apenas para consulta local.")
+- 600 ? ?: assuntos, usar subcampos a para assunto principal, x para subdivisão de assunto, z para localidade e y para forma de assunto (ex: "650 ? $a História $x Brasil $z Paraná")
+- 650 ? ?: assuntos, usar LCSH da LC ou DeCS da BIREME, Autoridades da Fundação Biblioteca Nacional, com subcampos a, x, z, y conforme aplicável, em português brasileiro (ex: "650 ? $a História $x Brasil $z Paraná")
+- 700 ? ?: autores secundários, usar subcampos a, c, q, d conforme forma autorizada; se autor corporativo, usar apenas o 710
+- 710 ? ?: autores corporativos, usar subcampos a para nome da entidade, c para data de criação, q para qualificação e d para data de extinção (ex: "710 2 $a Universidade Federal do Paraná. $c 1912-")
+- 740 ? ?: títulos relacionados, usar subcampo a para título e subcampo d para data de criação (ex: "740 0 $a História do Paraná."). Não usar o 730.
 
-Deixe os assuntos em português.
-Gere o registro MARC21 completo para este livro aplicando todas as regras acima:
+Gere o registro MARC21 completo para este livro aplicando todas as regras acima. 
+ATENÇÃO ÀS SEGUINTES TAREFAS INTELECTUAIS:
+1. Você deve deduzir e classificar os assuntos (tags 650) em português brasileiro com base no título e autor da obra.
+2. Se não houver informação disponível para um campo específico (ex: sem indicação de edição), apenas omita a tag do registro final. Não gere campos vazios.
 
 Título completo: {full_title}
-Autor: {author}
+Autor: {author_prompt}
 Ano: {year}
 Edição: {edition}
 Imprenta: {imprint}
-Assuntos: {subjects}
 
 Responda **APENAS** com o registro MARC completo (todos os campos necessários, com indicadores e subcampos exatos).
 <|im_end|>

@@ -62,13 +62,30 @@ def formatar_marc_personalizado(texto_marc):
 # 5. PREPARAR A PERGUNTA (PROMPT CORRIGIDO)
 # =====================================================
 prompt = """<|im_start|>user
-Gere para mim o MARC21 completo da seguinte obra:
+Você é um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogação do SiBi/UFPR versão 2025.
+
+Regras obrigatórias:
+- Campo 040: sempre 040 ## |a BR-CuUPA |b por |c BR-CuUPA
+- 245: nunca usar subcampo |h (DGM) para livros impressos
+- 250 (edição): ignorar reimpressões; só registrar 1ª edição se aparecer explicitamente
+- 260/264 (imprenta): usar [S.l.] quando não houver local, [s.n.] quando não houver editora; datas aproximadas entre colchetes [19--], [201-], etc.
+- Autoridades (100/110/111): usar subcampos a, c, q, d conforme forma autorizada
+- Título (245): transcrever exatamente a/b/c, sem pontuação extra dentro dos subcampos
+- Notas (5XX): seguir exemplos do manual (502 para teses, 520 para resumos, 591 para notas locais, etc.)
+- Subjects (650): usar LCSH da LC
+
+Adicione as demais tags conforme o Manual de Catalogação do SIBI/UFPR, mas siga as regras acima à risca.
+Deixe os assuntos do campo 650 em português. 
+Gere o registro MARC21 para este livro aplicando todas as regras acima. 
+IMPORTANTE: Utilize APENAS os dados fornecidos abaixo. Não invente ISBN, paginação ou classificações que não estejam na lista.
 
 Título completo: O segredo de Luísa
 Autor: Fernando Dolabela
-Ano: 2008 
+Ano: 2008
 Imprenta: São Paulo : Sextante, 2008
 
+
+Responda **APENAS** com o registro MARC completo (todos os campos necessários, com indicadores e subcampos exatos).
 <|im_end|>
 <|im_start|>assistant
 """
