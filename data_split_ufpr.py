@@ -40,10 +40,11 @@ for file_name in file_names:
     input_file = directory_path / file_name
 
     # Cabeçalho XML básico (ajuste se o seu arquivo tiver namespace específico)
-    header = '<?xml version="1.0" encoding="UTF-8"?> \n<collection>\n'
+    header = '<collection>'
     footer = '</collection>'
     parser = etree.XMLParser(recover=True) # Create an XML parser that can recover from errors
-    context = etree.iterparse(str(input_file), events=('end',), tag='record', parser=parser)  # ou sem namespace se não tiver
+    # Passando recover=True diretamente para o iterparse
+    context = etree.iterparse(str(input_file), events=('end',), tag='record', recover=True)
 
     for event, element in context:
         # Converte o <record> pra string
