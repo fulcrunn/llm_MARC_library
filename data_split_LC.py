@@ -7,9 +7,9 @@ import sys
 
 input_file = "/workspace/inputs/final_output_file.xml"
 output_prefix = 'marc_chunk_'
-target_size_bytes = 2 * (1024**3) # 5 GB
-current_size = 0
-chunk_num = 1
+records_size = 0
+records_limits = 100000
+chunk_num = 5000
 current_records = []
 
 # Cabeçalho XML básico (ajuste se o seu arquivo tiver namespace específico)
@@ -25,23 +25,21 @@ for event, element in context:
   record_str = etree.tostring(element, encoding='unicode', pretty_print=True)
   # Adiciona ao chunk atual
   current_records.append(record_str)
-  # Estima tamanho (aprox, em bytes)
-  current_size += len(record_str.encode('utf-8'))
   # Limpa o elemento pra economizar memória
   element.clear()
 
-  if current_size >= target_size_bytes / (1024**2):
+  if records_size <= records_limits:
     # Escreve o chunk
         output_file = f"/workspace/outputs/{output_prefix}{chunk_num:03d}.xml"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(header)
             f.writelines(current_records)
             f.write(footer)
-        print(f"Chunk {chunk_num} salvo: {output_file} (~{current_size / (1024**3):.2f} GB)")
+        print(f"Chunk {chunk_num} salvo: {output_file} (com um total de {records_size} registros)")
 
         chunk_num += 1
         current_records = []
-        current_size = 0
+        records_size +=1
 
 # Último chunk se sobrar
 if current_records:
