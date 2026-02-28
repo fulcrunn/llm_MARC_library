@@ -10,17 +10,21 @@ from pathlib import Path
 
 # Configurations
 
-input_folder = r"P:.\workspace\inputs"  # Folder containing the large XML files
-out_put_folder_path = Path(r".\marc_chunks") # Folder to save the chunked XML files
+input_folder = "./workspace/inputs"  # Folder containing the large XML files
 #input_file = r"P:\Artigos\Nova pasta\codigo\marc.xml"  # Path to the large XML file
 output_prefix = 'marc_chunk_'
-target_size = 5000 # 5 GB
+target_size = 2000 # 2 GB
 current_size = 0
 chunk_num = 1
 current_records = []
 
 
 # Create the directory
+try:
+    out_put_folder_path = Path(r"/marc_chunks") # Folder to save the chunked XML files
+    print(f"Directory '{out_put_folder_path}' created successfully.")
+except FileExistsError:
+    print(f"Directory '{out_put_folder_path}' already exists.")    
 try:
     out_put_folder_path.mkdir()
     print(f"Directory '{out_put_folder_path}' created successfully.")
@@ -66,7 +70,7 @@ for file_name in file_names:
 
         # Último chunk se sobrar
         if current_records:
-            output_file = f"{output_prefix}{chunk_num:03d}.xml"
+            output_file = f"/workspace/outputs/{output_prefix}{chunk_num:03d}.xml"
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(header)
                 f.writelines(current_records)

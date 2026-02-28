@@ -5,7 +5,7 @@ import pandas as pd
 import os
 import sys
 
-input_file = "./input/final_output_file"
+input_file = "/workspace/inputs/final_output_file.xml"
 output_prefix = 'marc_chunk_'
 target_size = 5000 # 5 GB
 current_size = 0
@@ -45,7 +45,7 @@ for event, element in context:
 
 # Último chunk se sobrar
 if current_records:
-    output_file = f"{output_prefix}{chunk_num:03d}.xml"
+    output_file = f"/workspace/outputs/{output_prefix}{chunk_num:03d}.xml"
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(header)
         f.writelines(current_records)
