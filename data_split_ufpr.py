@@ -13,7 +13,7 @@ from pathlib import Path
 input_folder = "/workspace/inputs"  # Folder containing the large XML files
 #input_file = r"P:\Artigos\Nova pasta\codigo\marc.xml"  # Path to the large XML file
 output_prefix = 'marc_chunk_'
-target_size = 2000 # 2 GB
+target_size = 2 * (1024**3) # 2 GB
 current_size = 0
 chunk_num = 1
 current_records = []
@@ -42,8 +42,8 @@ for file_name in file_names:
     # Cabeçalho XML básico (ajuste se o seu arquivo tiver namespace específico)
     header = '<?xml version="1.0" encoding="UTF-8"?> \n<collection>\n'
     footer = '</collection>'
-
-    context = etree.iterparse(input_file, events=('end',), tag='record')  # ou sem namespace se não tiver
+    parser = etree.XMLParser(recover=True) # Create an XML parser that can recover from errors
+    context = etree.iterparse(input_file, events=('end',), tag='record', parser=parser)  # ou sem namespace se não tiver
 
     for event, element in context:
         # Converte o <record> pra string
@@ -57,20 +57,21 @@ for file_name in file_names:
 
         if current_size >= target_size / (1024**2):
             # Escreve o chunk
-                output_file = f"{out_put_folder_path}/{output_prefix}{chunk_num:03d}.xml"
+                output_file = out_put_folder_path / f"{output_prefix}{chunk_num:03d}.xml"
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(header)
                     f.writelines(current_records)
                     f.write(footer)
                 print(f"Chunk {chunk_num} salvo: {output_file} (~{current_size / (1024**3):.2f} GB)")
 
+                # Reseta os contadores para o próximo chunk
                 chunk_num += 1
                 current_records = []
                 current_size = 0
 
         # Último chunk se sobrar
         if current_records:
-            output_file = f"{out_put_folder_path}/{output_prefix}{chunk_num:03d}.xml"
+            output_file = out_put_folder_path / f"{output_prefix}{chunk_num:03d}.xml"
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(header)
                 f.writelines(current_records)
