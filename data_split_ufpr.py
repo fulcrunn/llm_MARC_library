@@ -43,7 +43,7 @@ for file_name in file_names:
     header = '<?xml version="1.0" encoding="UTF-8"?> \n<collection>\n'
     footer = '</collection>'
     parser = etree.XMLParser(recover=True) # Create an XML parser that can recover from errors
-    context = etree.iterparse(input_file, events=('end',), tag='record', parser=parser)  # ou sem namespace se não tiver
+    context = etree.iterparse(str(input_file), events=('end',), tag='record', parser=parser)  # ou sem namespace se não tiver
 
     for event, element in context:
         # Converte o <record> pra string
