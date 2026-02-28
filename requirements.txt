@@ -20,5 +20,3 @@ pymupdf
 python-docx
 lxml
 
-# ===== UTILS =====
-gdown
