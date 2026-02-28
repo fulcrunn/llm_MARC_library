@@ -21,7 +21,7 @@ current_records = []
 
 # Create the directory
 try:
-    out_put_folder_path = Path(r"/marc_chunks") # Folder to save the chunked XML files
+    out_put_folder_path = Path(r"/workspace/marc_chunks") # Folder to save the chunked XML files
     print(f"Directory '{out_put_folder_path}' created successfully.")
 except FileExistsError:
     print(f"Directory '{out_put_folder_path}' already exists.")    
@@ -70,7 +70,7 @@ for file_name in file_names:
 
         # Último chunk se sobrar
         if current_records:
-            output_file = f"/workspace/outputs/{output_prefix}{chunk_num:03d}.xml"
+            output_file = f"{out_put_folder_path}/{output_prefix}{chunk_num:03d}.xml"
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(header)
                 f.writelines(current_records)
