@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Configurations
 
-input_folder = "./workspace/inputs"  # Folder containing the large XML files
+input_folder = "/workspace/inputs"  # Folder containing the large XML files
 #input_file = r"P:\Artigos\Nova pasta\codigo\marc.xml"  # Path to the large XML file
 output_prefix = 'marc_chunk_'
 target_size = 2000 # 2 GB
