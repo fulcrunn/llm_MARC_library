@@ -4,7 +4,7 @@ set -e
 echo "🔄 Atualizando sistema e instalando dependências base..."
 apt-get update
 apt-get install -y git python3-pip python3-dev ninja-build build-essential wget
-pip install gdown -y
+pip install gdown 
 gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link"
 gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link"
 

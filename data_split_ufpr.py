@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Configurations
 
-input_folder = r"P:.\inputs"  # Folder containing the large XML files
+input_folder = r"P:.\workspace\inputs"  # Folder containing the large XML files
 out_put_folder_path = Path(r".\marc_chunks") # Folder to save the chunked XML files
 #input_file = r"P:\Artigos\Nova pasta\codigo\marc.xml"  # Path to the large XML file
 output_prefix = 'marc_chunk_'
