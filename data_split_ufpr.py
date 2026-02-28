@@ -13,7 +13,7 @@ from pathlib import Path
 input_folder = "/workspace/inputs"  # Folder containing the large XML files
 #input_file = r"P:\Artigos\Nova pasta\codigo\marc.xml"  # Path to the large XML file
 output_prefix = 'marc_chunk_'
-target_size = 2 * (1024**3) # 2 GB
+target_size_bytes = 2 * (1024**3) # 2 GB
 current_size = 0
 chunk_num = 1
 current_records = []
@@ -56,7 +56,7 @@ for file_name in file_names:
         # Limpa o elemento pra economizar memória
         element.clear()
 
-        if current_size >= target_size / (1024**2):
+        if current_size >= target_size_bytes:
             # Escreve o chunk
                 output_file = out_put_folder_path / f"{output_prefix}{chunk_num:03d}.xml"
                 with open(output_file, 'w', encoding='utf-8') as f:

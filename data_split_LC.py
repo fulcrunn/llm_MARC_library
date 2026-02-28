@@ -7,7 +7,7 @@ import sys
 
 input_file = "/workspace/inputs/final_output_file.xml"
 output_prefix = 'marc_chunk_'
-target_size = 5000 # 5 GB
+target_size_bytes = 2 * (1024**3) # 5 GB
 current_size = 0
 chunk_num = 1
 current_records = []
@@ -17,8 +17,8 @@ header = '''<?xml version="1.0" encoding="UTF-8"?>
 <collection xmlns="http://www.loc.gov/MARC21/slim">
 '''
 footer = '</collection>'
-
-context = etree.iterparse(input_file, events=('end',), tag='{http://www.loc.gov/MARC21/slim}record')  # ou sem namespace se não tiver
+parser = etree.XMLParser(recover=True)
+context = etree.iterparse(input_file, events=('end',), tag='{http://www.loc.gov/MARC21/slim}record', recover=True)  # ou sem namespace se não tiver
 
 for event, element in context:
   # Converte o <record> pra string
@@ -30,9 +30,9 @@ for event, element in context:
   # Limpa o elemento pra economizar memória
   element.clear()
 
-  if current_size >= target_size / (1024**2):
+  if current_size >= target_size_bytes / (1024**2):
     # Escreve o chunk
-        output_file = f"{output_prefix}{chunk_num:03d}.xml"
+        output_file = f"/workspace/outputs/{output_prefix}{chunk_num:03d}.xml"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(header)
             f.writelines(current_records)
