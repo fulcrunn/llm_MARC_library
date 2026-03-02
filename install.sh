@@ -30,10 +30,10 @@ echo "📚 Install tmux"
 apt-get install -y tmux
 
 #echo "⬇ Baixando dataset..."
-#gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
-#gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link"
-#gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link"
-#gdown --fuzzy "https://drive.google.com/file/d/17uJV-j5PXJa-GdCEgT1wrml1ABHeJmb5/view?usp=sharing"
+gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
+gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link"
+gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link"
+gdown --fuzzy "https://drive.google.com/file/d/17uJV-j5PXJa-GdCEgT1wrml1ABHeJmb5/view?usp=sharing"
 
 echo "🔎 Testando dependências críticas..."
 

@@ -15,7 +15,7 @@ OUTPUT_JSONL = '/workspace/outputs/train_dataset.jsonl'
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
-MAX_RECORDS = 1000000   
+MAX_RECORDS = 50000   
 # ===============================================
 data = []
 
