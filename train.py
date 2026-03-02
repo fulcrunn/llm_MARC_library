@@ -17,7 +17,7 @@ from trl import SFTTrainer, SFTConfig
 # =====================================================
 
 MODEL_NAME = "mistralai/Mistral-7B-v0.1"
-DATA_PATH = os.getenv("DATA_PATH", "train_dataset.jsonl")
+DATA_PATH = os.getenv("DATA_PATH", "./train_dataset.jsonl")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
