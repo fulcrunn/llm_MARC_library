@@ -8,10 +8,10 @@ from tqdm import tqdm
 
 
 # ==================== CONFIG ====================
-MARC_FOLDER = '/dataset/chunk/'
-PDF_FOLDER  = '/dataset/pdfs_catalogacao/'
+MARC_FOLDER = '/workspace/inputs'
+PDF_FOLDER  = '/workspace/pdfs/'
 #DOC_FOLDER  = '/dataset/docs_catalogacao/'
-OUTPUT_JSONL = '/dataset/train_dataset.jsonl'
+OUTPUT_JSONL = '/workspace/outputs/train_dataset.jsonl'
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
