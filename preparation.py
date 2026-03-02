@@ -124,7 +124,7 @@ print("Processando MARC XML (streaming otimizado)...")
 count = 0
 
 # Inicializa a barra de progresso visual
-pbar_xml = tqdm(total=MAX_RECORDS, desc="Extraindo XML", unit=" reg", color="green")
+pbar_xml = tqdm(total=MAX_RECORDS, desc="Extraindo XML", unit=" reg", colour="green")
 
 for filename in os.listdir(MARC_FOLDER):
     if filename.endswith('.xml') or filename.endswith('.xml.gz'):
@@ -151,7 +151,7 @@ pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.endswith('.pdf')]
 if pdf_files:
     print("\nProcessando PDFs...")
     # Outra barra de progresso para os PDFs
-    for filename in tqdm(pdf_files, desc="Lendo PDFs", unit=" arq", color="blue"):
+    for filename in tqdm(pdf_files, desc="Lendo PDFs", unit=" arq", colour="blue"):
         path = os.path.join(PDF_FOLDER, filename)
         doc = fitz.open(path)
         text = ""
@@ -167,7 +167,7 @@ if pdf_files:
 # ====================== 4. SALVAR JSONL ======================
 print("\nSalvando o dataset final no disco...")
 with open(OUTPUT_JSONL, 'w', encoding='utf-8') as f:
-    for item in tqdm(data, desc="Escrevendo JSONL", unit=" lin", color="magenta"):
+    for item in tqdm(data, desc="Escrevendo JSONL", unit=" lin", colour="magenta"):
         f.write(json.dumps(item, ensure_ascii=False) + '\n')
 
 print(f"\n✅ Pronto! Dataset criado com {len(data)} exemplos → {OUTPUT_JSONL}")
