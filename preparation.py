@@ -7,7 +7,6 @@ from docx import Document
 from tqdm import tqdm
 import random
 
-
 # ==================== CONFIG ====================
 MARC_FOLDER = '/workspace/inputs'
 PDF_FOLDER  = '/workspace/pdfs/'
@@ -16,15 +15,16 @@ OUTPUT_JSONL = '/workspace/outputs/train_dataset.jsonl'
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
-MAX_RECORDS = 50000   # aumente depois que testar
+MAX_RECORDS = 50000   
 # ===============================================
 data = []
 
+# Exceção customizada para parar a leitura do XML gigante na hora exata
+class StopParsing(Exception):
+    pass
+
 # ==================== 1. PROCESSAMENTO DOS REGISTROS MARC ====================
 def format_marc_record(record):
-    # === Extração do Autor e Data Augmentation (Truque da Inversão) ===
-    author_prompt = ''
-    author_field = record.get('100')
     # === Extração do Autor e Data Augmentation (50/50) ===
     author_prompt = ''
     author_field = record.get('100')
@@ -94,11 +94,11 @@ Regras obrigatórias:
 - 504 ? ?: bibliografia, usar subcampo a para texto da nota (ex: "504 $a Bibliografia: p. 290-300.")
 - 505 ? ?: sumário, usar subcampo a para texto do sumário (ex: "505 $a Capítulo 1: Introdução -- Capítulo 2: Metodologia.")
 - 590 ? ?: notas locais, usar subcampo a para texto da nota (ex: "590 $a Exemplar disponível apenas para consulta local.")
-- 600 ? ?: assuntos, usar subcampos a para assunto principal, x para subdivisão de assunto, z para localidade e y para forma de assunto (ex: "650 ? $a História $x Brasil $z Paraná")
-- 650 ? ?: assuntos, usar LCSH da LC ou DeCS da BIREME, Autoridades da Fundação Biblioteca Nacional, com subcampos a, x, z, y conforme aplicável, em português brasileiro (ex: "650 ? $a História $x Brasil $z Paraná")
+- 600 ? ?: assuntos, usar subcampos a para assunto principal, x para subdivisão de assunto, z para localidade e y para forma de assunto
+- 650 ? ?: assuntos, usar LCSH da LC ou DeCS da BIREME, Autoridades da Fundação Biblioteca Nacional, com subcampos a, x, z, y conforme aplicável, em português brasileiro
 - 700 ? ?: autores secundários, usar subcampos a, c, q, d conforme forma autorizada; se autor corporativo, usar apenas o 710
-- 710 ? ?: autores corporativos, usar subcampos a para nome da entidade, c para data de criação, q para qualificação e d para data de extinção (ex: "710 2 $a Universidade Federal do Paraná. $c 1912-")
-- 740 ? ?: títulos relacionados, usar subcampo a para título e subcampo d para data de criação (ex: "740 0 $a História do Paraná."). Não usar o 730.
+- 710 ? ?: autores corporativos, usar subcampos a para nome da entidade, c para data de criação, q para qualificação e d para data de extinção
+- 740 ? ?: títulos relacionados, usar subcampo a para título e subcampo d para data de criação. Não usar o 730.
 
 Gere o registro MARC21 completo para este livro aplicando todas as regras acima. 
 ATENÇÃO ÀS SEGUINTES TAREFAS INTELECTUAIS:
@@ -119,60 +119,55 @@ Responda **APENAS** com o registro MARC completo (todos os campos necessários, 
 
     return {"text": prompt}
 
-
 # ====================== 2. XMLs ======================
-print("Processando MARC XML (streaming, baixo uso de memória)...")
+print("Processando MARC XML (streaming otimizado)...")
 count = 0
+
+# Inicializa a barra de progresso visual
+pbar_xml = tqdm(total=MAX_RECORDS, desc="Extraindo XML", unit=" reg", color="green")
+
 for filename in os.listdir(MARC_FOLDER):
     if filename.endswith('.xml') or filename.endswith('.xml.gz'):
         path = os.path.join(MARC_FOLDER, filename)
-        print(f"Processando {filename}...")
 
         def process_record(record):
             global count
             if count >= MAX_RECORDS:
-                return
+                raise StopParsing() # Dispara o gatilho de parada imediata!
+            
             data.append(format_marc_record(record))
             count += 1
-            if count % MAX_RECORDS == 0:
-                print(f"  → {count} registros processados")
+            pbar_xml.update(1) # Atualiza a barrinha verde no terminal
 
-        map_xml(process_record, path)  # streaming perfeito para arquivos grandes!
+        try:
+            map_xml(process_record, path) 
+        except StopParsing:
+            break # Captura a exceção e sai do loop dos arquivos instantaneamente
 
-# ====================== 2. PDFs ======================
-print("Processando PDFs...")
-for filename in os.listdir(PDF_FOLDER):
-    if filename.endswith('.pdf'):
+pbar_xml.close()
+
+# ====================== 3. PDFs ======================
+pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.endswith('.pdf')]
+if pdf_files:
+    print("\nProcessando PDFs...")
+    # Outra barra de progresso para os PDFs
+    for filename in tqdm(pdf_files, desc="Lendo PDFs", unit=" arq", color="blue"):
         path = os.path.join(PDF_FOLDER, filename)
         doc = fitz.open(path)
         text = ""
         for page in doc:
             text += page.get_text("text") + "\n"
-        # Divide em chunks de ~800 tokens
+        
         chunks = [text[i:i+6000] for i in range(0, len(text), 6000)]
         for chunk in chunks:
             data.append({
                 "text": f"<|im_start|>user\nExplique as regras de catalogação MARC a partir deste trecho do documento:\n{chunk}\n<|im_end|>\n<|im_start|>assistant\n{chunk}\n<|im_end|>"
             })
 
-'''
-# ====================== 3. DOCs ======================
-print("Processando DOC/DOCX...")
-for filename in os.listdir(DOC_FOLDER):
-    if filename.endswith(('.doc', '.docx')):
-        path = os.path.join(DOC_FOLDER, filename)
-        doc = Document(path)
-        text = "\n".join([para.text for para in doc.paragraphs])
-        chunks = [text[i:i+6000] for i in range(0, len(text), 6000)]
-        for chunk in chunks:
-            data.append({
-                "text": f"<|im_start|>user\nResuma as melhores práticas de catalogação MARC deste documento:\n{chunk}\n<|im_end|>\n<|im_start|>assistant\n{chunk}\n<|im_end|>"
-            })
-'''
 # ====================== 4. SALVAR JSONL ======================
-# Salva o dataset
+print("\nSalvando o dataset final no disco...")
 with open(OUTPUT_JSONL, 'w', encoding='utf-8') as f:
-    for item in data:
+    for item in tqdm(data, desc="Escrevendo JSONL", unit=" lin", color="magenta"):
         f.write(json.dumps(item, ensure_ascii=False) + '\n')
 
-print(f"Pronto! Dataset criado com {len(data)} exemplos → {OUTPUT_JSONL}")
+print(f"\n✅ Pronto! Dataset criado com {len(data)} exemplos → {OUTPUT_JSONL}")
