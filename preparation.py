@@ -5,6 +5,7 @@ from pymarc import Record
 import fitz  # PyMuPDF para PDF
 from docx import Document
 from tqdm import tqdm
+import random
 
 
 # ==================== CONFIG ====================
