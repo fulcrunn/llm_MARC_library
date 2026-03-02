@@ -5,8 +5,6 @@ echo "🔄 Atualizando sistema e instalando dependências base..."
 apt-get update
 apt-get install -y git python3-pip python3-dev ninja-build build-essential wget
 pip install gdown 
-gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link"
-gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link"
 
 echo "📥 Clonando repositório..."
 if [ ! -d "llm_MARC_library" ]; then
@@ -28,8 +26,13 @@ MAX_JOBS=4 pip3 install flash-attn==2.6.3 --no-build-isolation --verbose
 echo "📚 Instalando dependências do projeto..."
 pip3 install -r requirements.txt
 
+echo "📚 Install tmux"
+apt-get install -y tmux
+
 echo "⬇ Baixando dataset..."
 gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing"
+gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link"
+gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link"
 
 echo "🔎 Testando dependências críticas..."
 
@@ -47,8 +50,5 @@ python -c "import bitsandbytes as bnb; print('bitsandbytes OK')"
 
 echo "🔎 Testando flash-attn..."
 python -c "import flash_attn; print('flash_attn OK')"
-
-echo "📚 Install tmux"
-apt-get install -y tmux
 
 echo "✅ Pod configurado com sucesso!"

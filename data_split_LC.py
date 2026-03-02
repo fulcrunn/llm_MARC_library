@@ -5,7 +5,7 @@ import pandas as pd
 import os
 import sys
 
-input_file = "/workspace/inputs/final_output_file.xml"
+input_file = "/workspace/inputs_lc/final_output_file.xml"
 output_prefix = 'marc_chunk_'
 records_size = 0
 records_limits = 100000
