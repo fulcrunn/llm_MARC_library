@@ -30,10 +30,11 @@ echo "📚 Install tmux"
 apt-get install -y tmux
 
 #echo "⬇ Baixando dataset..."
-gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing" # train.jsonl
+#gdown --fuzzy "https://drive.google.com/file/d/10VCcLPWjJP4fc0B05H0Ki0xMqSSEqMv0/view?usp=sharing" # train.jsonl
 gdown --fuzzy "https://drive.google.com/file/d/1p_N-exEkaDAmFNODdFKKqLER8shw2_nG/view?usp=drive_link" # xmlUFPR
 #gdown --fuzzy "https://drive.google.com/file/d/1uFQcfFqaPzXtuYObg719yQ-czRUXhXDM/view?usp=drive_link" # xmlLC
 gdown --fuzzy "https://drive.google.com/file/d/17uJV-j5PXJa-GdCEgT1wrml1ABHeJmb5/view?usp=sharing" # pdfs
+gdown --fuzzy "https://drive.google.com/file/d/1W2cOGR5E7YOx1ijgG9zyalD-6VAAzR-k/view?usp=sharing" # jsonl
 
 echo "🔎 Testando dependências críticas..."
 

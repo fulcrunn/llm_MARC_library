@@ -21,9 +21,8 @@ DATA_PATH = os.getenv("DATA_PATH", "./train_dataset.jsonl")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
-# Aumentamos o Batch Size para saturar a RTX 3090 (usar ~90% da VRAM)
-BATCH_SIZE = 24        
-# Reduzimos o Grad Acc, já que o batch size dobrou
+# 🚀 DOBRAMOS O BATCH SIZE: Vamos saturar os 48GB da A6000!
+BATCH_SIZE = 48        
 GRAD_ACC = 1           
 LR = 2e-4
 EPOCHS = 3
@@ -67,12 +66,12 @@ model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     quantization_config=bnb_config,
     device_map="auto",
-    # 🔥 A MÁGICA ACONTECE AQUI: Ativa o Flash Attention 2
     attn_implementation="flash_attention_2" 
 )
 
 model = prepare_model_for_kbit_training(model)
-model.gradient_checkpointing_enable()
+# 🚀 DESATIVADO: Como temos muita VRAM, trocamos memória por velocidade bruta
+# model.gradient_checkpointing_enable() 
 model.config.use_cache = False
 
 # =====================================================
@@ -102,6 +101,7 @@ peft_config = LoraConfig(
 
 # O SFTConfig substitui o TrainingArguments e herda todos os parâmetros dele,
 # mas também aceita os parâmetros específicos do SFTTrainer (packing, max_seq_length, etc)
+
 training_args = SFTConfig(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=BATCH_SIZE,
@@ -115,13 +115,13 @@ training_args = SFTConfig(
     warmup_ratio=0.05,
     lr_scheduler_type="cosine",
     report_to="none",             
-    dataloader_num_workers=os.cpu_count() or 4, 
+    
+    # 🚀 FIXADO: Evita o bug de threads do RunPod que trava a CPU
+    dataloader_num_workers=4, 
     dataloader_pin_memory=True,
+    disable_tqdm=False, 
     
-    # Otimizador em 8-bit é mais rápido e gasta menos VRAM
     optim="adamw_8bit",
-    
-    # Parâmetros que antes iam no SFTTrainer agora vêm aqui
     max_seq_length=MAX_SEQ_LENGTH,
     dataset_text_field="text",
     packing=True,
