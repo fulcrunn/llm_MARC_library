@@ -22,7 +22,7 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
 # 🚀 DOBRAMOS O BATCH SIZE: Vamos saturar os 48GB da A6000!
-BATCH_SIZE = 48        
+BATCH_SIZE = 40        
 GRAD_ACC = 1           
 LR = 2e-4
 EPOCHS = 1 # Epocas maiores podem levar a overfitting e demorar para treinar.
