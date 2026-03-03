@@ -22,10 +22,10 @@ mkdir inputs
 #mkdir inputs_ufpr
 #mkdir inputs_lc
 mkdir outputs
-mkdir lc_dataset
+#mkdir lc_dataset
 mkdir pdfs
 echo "Descompactando arquivos"
-unzip master-gdc-gdcdatasets-2020445551_2019-2020445551_2019.zip -d ./lc_dataset
+#unzip master-gdc-gdcdatasets-2020445551_2019-2020445551_2019.zip -d ./lc_dataset
 unzip inputs_ufpr.zip -d ./inputs
 cd ./lc_dataset/2020445551_2019
 apt-get install -y pv
