@@ -164,24 +164,26 @@ def map_xml_robusto(process_record_func, filepath, pbar_xml):
                         pass
 
 # ======================                  
-print("Processando MARC XML (Motor Robusto e Tolerante a Falhas)...")
+print("Processando MARC XML (Priorizando arquivos menores/UFPR)...")
 count = 0
 
-# Inicializa a barra de progresso baseada na quantidade de registros
+# Pega todos os XMLs e ORDENA pelo tamanho (do menor arquivo para o maior)
+arquivos_xml = [f for f in os.listdir(MARC_FOLDER) if f.endswith('.xml') or f.endswith('.xml.gz')]
+arquivos_xml.sort(key=lambda x: os.path.getsize(os.path.join(MARC_FOLDER, x)))
+
 pbar_xml = tqdm(total=MAX_RECORDS, desc="Extraindo XML", unit=" reg", colour="green")
 
-for filename in os.listdir(MARC_FOLDER):
-    if filename.endswith('.xml') or filename.endswith('.xml.gz'):
-        path = os.path.join(MARC_FOLDER, filename)
+for filename in arquivos_xml:
+    path = os.path.join(MARC_FOLDER, filename)
+    print(f"\nLendo: {filename}...")
+    
+    def process_record(record):
+        global count
+        data.append(format_marc_record(record))
+        count += 1
+        pbar_xml.update(1)
         
-        def process_record(record):
-            global count
-            data.append(format_marc_record(record))
-            count += 1
-            pbar_xml.update(1)
-            
-        # Chama o nosso novo leitor blindado contra erros!
-        map_xml_robusto(process_record, path, pbar_xml)
+    map_xml_robusto(process_record, path, pbar_xml)
 
 pbar_xml.close()
 
