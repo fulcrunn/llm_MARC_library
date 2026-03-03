@@ -25,7 +25,7 @@ MAX_SEQ_LENGTH = 512
 BATCH_SIZE = 48        
 GRAD_ACC = 1           
 LR = 2e-4
-EPOCHS = 3
+EPOCHS = 1 # Epocas maiores podem levar a overfitting e demorar para treinar.
 
 assert torch.cuda.is_available(), "Erro: GPU não está disponível!"
 print("GPU:", torch.cuda.get_device_name(0))
@@ -69,7 +69,7 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation="flash_attention_2" 
 )
 
-model = prepare_model_for_kbit_training(model)
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
 # 🚀 DESATIVADO: Como temos muita VRAM, trocamos memória por velocidade bruta
 # model.gradient_checkpointing_enable() 
 model.config.use_cache = False
@@ -106,6 +106,7 @@ training_args = SFTConfig(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=BATCH_SIZE,
     gradient_accumulation_steps=GRAD_ACC,
+    gradient_checkpointing=False,
     learning_rate=LR,
     num_train_epochs=EPOCHS,
     logging_steps=50,
