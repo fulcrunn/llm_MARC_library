@@ -6,6 +6,8 @@ import fitz  # PyMuPDF para PDF
 from docx import Document
 from tqdm import tqdm
 import random
+from io import StringIO
+from pymarc import parse_xml_to_array
 
 # ==================== CONFIG ====================
 MARC_FOLDER = '/workspace/inputs'
@@ -120,29 +122,66 @@ Responda **APENAS** com o registro MARC completo (todos os campos necessários, 
     return {"text": prompt}
 
 # ====================== 2. XMLs ======================
-print("Processando MARC XML (streaming otimizado)...")
+# ==================== LEITOR TOLERANTE A FALHAS ====================
+def map_xml_robusto(process_record_func, filepath, pbar_xml):
+    """
+    Lê o XML linha por linha, isolando cada registro.
+    Se um registro estiver quebrado (mismatched tag), ele é descartado e o script continua.
+    """
+    record_buffer = []
+    in_record = False
+    
+    # Prepara um cabeçalho falso para o pymarc aceitar o fragmento
+    cabecalho_fake = '<?xml version="1.0" encoding="UTF-8"?><collection xmlns="http://www.loc.gov/MARC21/slim">'
+    rodape_fake = '</collection>'
+
+    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            # Se atingimos o limite pelo process_record, interrompe a leitura
+            if count >= MAX_RECORDS:
+                break
+                
+            if '<record' in line:
+                in_record = True
+                record_buffer = [line]
+            elif in_record:
+                record_buffer.append(line)
+                if '</record>' in line:
+                    in_record = False
+                    
+                    # Junta as linhas para formar 1 registro XML completo
+                    xml_chunk = "".join(record_buffer)
+                    xml_to_parse = f"{cabecalho_fake}{xml_chunk}{rodape_fake}"
+                    
+                    try:
+                        # Tenta converter este registro específico
+                        records = parse_xml_to_array(StringIO(xml_to_parse))
+                        if records and len(records) > 0:
+                            # Se deu certo, manda para a sua função de formatação
+                            process_record_func(records[0])
+                    except Exception:
+                        # SE O REGISTRO ESTIVER QUEBRADO, CAI AQUI E É IGNORADO SILENCIOSAMENTE!
+                        pass
+
+# ======================                  
+print("Processando MARC XML (Motor Robusto e Tolerante a Falhas)...")
 count = 0
 
-# Inicializa a barra de progresso visual
+# Inicializa a barra de progresso baseada na quantidade de registros
 pbar_xml = tqdm(total=MAX_RECORDS, desc="Extraindo XML", unit=" reg", colour="green")
 
 for filename in os.listdir(MARC_FOLDER):
     if filename.endswith('.xml') or filename.endswith('.xml.gz'):
         path = os.path.join(MARC_FOLDER, filename)
-
+        
         def process_record(record):
             global count
-            if count >= MAX_RECORDS:
-                raise StopParsing() # Dispara o gatilho de parada imediata!
-            
             data.append(format_marc_record(record))
             count += 1
-            pbar_xml.update(1) # Atualiza a barrinha verde no terminal
-
-        try:
-            map_xml(process_record, path) 
-        except StopParsing:
-            break # Captura a exceção e sai do loop dos arquivos instantaneamente
+            pbar_xml.update(1)
+            
+        # Chama o nosso novo leitor blindado contra erros!
+        map_xml_robusto(process_record, path, pbar_xml)
 
 pbar_xml.close()
 
