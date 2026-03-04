@@ -3,87 +3,85 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 
 # =====================================================
-# 1. CONFIGURAÇÕES
+# CONFIGURAÇÕES DE CAMINHO
 # =====================================================
-BASE_MODEL = "mistralai/Mistral-7B-v0.1"
-ADAPTER_DIR = "./outputs"  
+MODEL_NAME = "mistralai/Mistral-7B-v0.1"
+ADAPTER_PATH = "./outputs"  # A pasta onde o seu modelo treinado foi salvo
+
+print("Iniciando o carregamento do modelo (Isso pode levar um minuto)...")
 
 # =====================================================
-# 2. CARREGAR TOKENIZADOR E MODELO BASE
+# 1. CARREGAR O MODELO BASE EM 4-BIT (Obrigatório no QLoRA)
 # =====================================================
-print("Carregando o Tokenizador...")
-tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=False)
-
-print("Carregando o Mistral original em 4-bits...")
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
 )
 
 base_model = AutoModelForCausalLM.from_pretrained(
-    BASE_MODEL,
+    MODEL_NAME,
     quantization_config=bnb_config,
-    device_map="auto"
+    device_map="auto",
 )
 
-# =====================================================
-# 3. VESTIR O MODELO 
-# =====================================================
-print("Injetando o adaptador MARC21 no cerebro do Mistral...")
-model = PeftModel.from_pretrained(base_model, ADAPTER_DIR)
+tokenizer = AutoTokenizer.from_pretrained(ADAPTER_PATH)
 
 # =====================================================
-# 4. FUNÇÃO DE FORMATAÇÃO VISUAL
+# 2. ACOPLAR O ADAPTADOR TREINADO (O Conhecimento MARC)
 # =====================================================
-def formatar_marc_personalizado(texto_marc):
-    linhas = texto_marc.strip().split('\n')
-    resultado = []
-    
-    for linha in linhas:
-        if not linha.strip():
-            continue
-            
-        if linha.startswith('='):
-            linha = linha[1:]
-            
-        linha = linha.replace('$', ' |')
-        
-        if len(linha) >= 6 and linha[0:3].isdigit():
-            tag = linha[0:3]
-            if not tag.startswith('00'):
-                indicadores = linha[4:6].replace('\\', '_').replace('  ', '__').replace(' ', '_')
-                linha = linha[:4] + indicadores + linha[6:]
-                
-        resultado.append(linha)
-        
-    return '\n'.join(resultado)
+model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
+model.eval() # Coloca o modelo em modo de inferência (desliga o cálculo de gradientes)
+
+print("✅ Modelo carregado com sucesso!\n")
 
 # =====================================================
-# 5. PREPARAR A PERGUNTA (PROMPT CORRIGIDO)
+# 3. DADOS DO LIVRO PARA TESTE
 # =====================================================
-prompt = """<|im_start|>user
+# Altere estes dados para testar obras diferentes para o seu artigo
+titulo_teste = "Adaptive filter theory"
+autor_teste = "Simon Haykin"
+ano_teste = "1996"
+edicao_teste = "3rd ed."
+imprenta_teste = "Prentice Hall"
+
+# =====================================================
+# 4. CONSTRUÇÃO DO PROMPT EXATO DO TREINAMENTO
+# =====================================================
+prompt = f"""<|im_start|>user
 Você é um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogação do SiBi/UFPR versão 2025.
 
 Regras obrigatórias:
-- Campo 040: sempre 040 ## |a BR-CuUPA |b por |c BR-CuUPA
-- 245: nunca usar subcampo |h (DGM) para livros impressos
-- 250 (edição): ignorar reimpressões; só registrar 1ª edição se aparecer explicitamente
-- 260/264 (imprenta): usar [S.l.] quando não houver local, [s.n.] quando não houver editora; datas aproximadas entre colchetes [19--], [201-], etc.
-- Autoridades (100/110/111): usar subcampos a, c, q, d conforme forma autorizada
-- Título (245): transcrever exatamente a/b/c, sem pontuação extra dentro dos subcampos
-- Notas (5XX): seguir exemplos do manual (502 para teses, 520 para resumos, 591 para notas locais, etc.)
-- Subjects (650): usar LCSH da LC
+  tag indicador 1 indicador 2: descrição da tag
+- 090 0 ?: código de classificação, usar Classificação Decimal de Dewey (CDD) ou Classificação Decimal Universal (CDU) conforme disponível; se ambos, priorizar CDD  
+- 100 ? ?: usar subcampos a, c, q, d conforme forma autorizada; se autor corporativo, usar 110 ou 111
+- 240 ? ?: usar para títulos uniformes, com subcampo a para título e subcampo d para data de criação (ex: "Brasil. Ministério da Educação. Secretaria de Educação Superior. Universidade Federal do Paraná. Setor de Ciências Humanas, Letras e Artes. Departamento de História. Curso de História.")
+- 245 ? ?: título principal no subcampo a, subtítulo no subcampo b, responsabilidade no subcampo c; transcrever exatamente sem pontuação extra
+- 250 ? ?: edição ignorar reimpressões; só registrar 1ª edição se aparecer explicitamente
+- 260/264 ? ?: impreta, usar [S.l.] quando não houver local, [s.n.] quando não houver editora; datas aproximadas entre colchetes [19--], [201-], etc.
+- 300 ? ?: descrição física, usar subcampos a para extensão (ex: "300 p."), b para ilustrações (ex: "il.") e c para dimensões (ex: "21 cm")
+- 490 0 ?: série, usar subcampo a para título da série e subcampo v para número da série (ex: "490 0 $a Coleção UFPR. $v 10")
+- 500 ? ?: notas gerais, usar subcampo a para texto da nota (ex: "500 $a Inclui bibliografia.")
+- 504 ? ?: bibliografia, usar subcampo a para texto da nota (ex: "504 $a Bibliografia: p. 290-300.")
+- 505 ? ?: sumário, usar subcampo a para texto do sumário (ex: "505 $a Capítulo 1: Introdução -- Capítulo 2: Metodologia.")
+- 590 ? ?: notas locais, usar subcampo a para texto da nota (ex: "590 $a Exemplar disponível apenas para consulta local.")
+- 600 ? ?: assuntos, usar subcampos a para assunto principal, x para subdivisão de assunto, z para localidade e y para forma de assunto
+- 650 ? ?: assuntos, usar LCSH da LC ou DeCS da BIREME, Autoridades da Fundação Biblioteca Nacional, com subcampos a, x, z, y conforme aplicável, em português brasileiro
+- 700 ? ?: autores secundários, usar subcampos a, c, q, d conforme forma autorizada; se autor corporativo, usar apenas o 710
+- 710 ? ?: autores corporativos, usar subcampos a para nome da entidade, c para data de criação, q para qualificação e d para data de extinção
+- 740 ? ?: títulos relacionados, usar subcampo a para título e subcampo d para data de criação. Não usar o 730.
 
-Adicione as demais tags conforme o Manual de Catalogação do SIBI/UFPR, mas siga as regras acima à risca.
-Deixe os assuntos do campo 650 em português. 
-Gere o registro MARC21 para este livro aplicando todas as regras acima. 
-IMPORTANTE: Utilize APENAS os dados fornecidos abaixo. Não invente ISBN, paginação ou classificações que não estejam na lista.
+Gere o registro MARC21 completo para este livro aplicando todas as regras acima. 
+ATENÇÃO ÀS SEGUINTES TAREFAS INTELECTUAIS:
+1. Você deve deduzir e classificar os assuntos (tags 650) em português brasileiro com base no título e autor da obra.
+2. Se não houver informação disponível para um campo específico (ex: sem indicação de edição), apenas omita a tag do registro final. Não gere campos vazios.
 
-Título completo: O segredo de Luísa
-Autor: Fernando Dolabela
-Ano: 2008
-Imprenta: São Paulo : Sextante, 2008
-
+Título completo: {titulo_teste}
+Autor: {autor_teste}
+Ano: {ano_teste}
+Edição: {edicao_teste}
+Imprenta: {imprenta_teste}
 
 Responda **APENAS** com o registro MARC completo (todos os campos necessários, com indicadores e subcampos exatos).
 <|im_end|>
@@ -91,32 +89,25 @@ Responda **APENAS** com o registro MARC completo (todos os campos necessários, 
 """
 
 # =====================================================
-# 6. GERAR E FORMATAR O REGISTRO
+# 5. GERAÇÃO DO REGISTRO
 # =====================================================
-print("\nGerando registro MARC21...\n")
+print(f"📚 Catalogando a obra: {titulo_teste}\n")
+print("-" * 60)
 
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
 
-outputs = model.generate(
-    **inputs, 
-    max_new_tokens=800,  
-    temperature=0.1, 
-    do_sample=True,
-    pad_token_id=tokenizer.eos_token_id
-)
+with torch.no_grad():
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=512, # Limite de tamanho da resposta
+        temperature=0.1,    # Baixa temperatura = respostas mais determinísticas e precisas (ideal para catalogação)
+        top_p=0.9,
+        do_sample=True,
+        eos_token_id=tokenizer.eos_token_id
+    )
 
-# Corta os tokens do prompt e decodifica estritamente a nova resposta
-tamanho_do_prompt = inputs.input_ids.shape[-1]
-tokens_gerados = outputs[0][tamanho_do_prompt:]
-texto_bruto_gerado = tokenizer.decode(tokens_gerados, skip_special_tokens=True).strip()
+# Decodifica apenas a resposta gerada pelo modelo, ignorando o prompt gigante de entrada
+resposta = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
 
-# Aplica a nossa formatação customizada
-registro_final = formatar_marc_personalizado(texto_bruto_gerado)
-
-# Exibe na tela e salva em arquivo para evitar problemas com acentos no terminal
-print(registro_final)
-
-with open("resultado.txt", "w", encoding="utf-8") as f:
-    f.write(registro_final)
-    
-print("\n=== Registro salvo com sucesso no arquivo 'resultado.txt' ===")
+print(resposta.strip())
+print("-" * 60)
