@@ -37,11 +37,11 @@ model.eval()
 # =====================================================
 # 3. DADOS DE TESTE INÉDITOS
 # =====================================================
-titulo_teste = "Adaptive filter: theory and applications"
-autor_teste = "Farhang-Boroujeny, B"
-ano_teste = "1998"
+titulo_teste = "Making poor man's guitars: cigar box guitars, the frying pan banjo, and other DIY instruments"
+autor_teste = "Shane Speal"
+ano_teste = "2018"
 edicao_teste = ""
-imprenta_teste = " Chichester: J. Wiley"
+imprenta_teste = " Mount Joy:Fox Chapel Publishing,"
 
 prompt = f"""<|im_start|>user
 Voce e um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogacao do SiBi/UFPR versao 2025.
