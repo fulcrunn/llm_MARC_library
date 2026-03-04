@@ -33,11 +33,11 @@ print("✅ Modelo puro carregado com sucesso!\n")
 # =====================================================
 # 2. DADOS DO LIVRO PARA TESTE
 # =====================================================
-titulo_teste = "A Inteligência Artificial na Ciência da Informação : impactos na catalogação"
-autor_teste = "Silva, Maria Clara"
-ano_teste = "2026"
-edicao_teste = "1. ed."
-imprenta_teste = "Curitiba : Editora UFPR, 2026"
+titulo_teste = "Adaptive filter: theory and applications"
+autor_teste = "Farhang-Boroujeny, B"
+ano_teste = "1998"
+edicao_teste = ""
+imprenta_teste = " Chichester: J. Wiley"
 
 # =====================================================
 # 3. CONSTRUÇÃO DO PROMPT
