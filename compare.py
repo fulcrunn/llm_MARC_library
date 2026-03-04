@@ -37,11 +37,11 @@ model.eval()
 # =====================================================
 # 3. DADOS DE TESTE INÉDITOS
 # =====================================================
-titulo_teste = "Judeus em exílio"
-autor_teste = "Joseph Roth"
-ano_teste = "2017"
+titulo_teste = "Gestão socio ambiental no Brasil: Uma análise ecocêntrica"
+autor_teste = "Rodrigo Berté"
+ano_teste = "2013"
 edicao_teste = ""
-imprenta_teste = " Sao Paulo:Mundareu"
+imprenta_teste = " Curitiba:Intersaberes"
 
 prompt = f"""<|im_start|>user
 Voce e um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogacao do SiBi/UFPR versao 2025.
