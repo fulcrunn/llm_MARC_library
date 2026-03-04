@@ -22,10 +22,10 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
 # 🚀 DOBRAMOS O BATCH SIZE: Vamos saturar os 48GB da A6000!
-BATCH_SIZE = 32        
-GRAD_ACC = 1           
+BATCH_SIZE = 4        
+GRAD_ACC = 2           
 LR = 2e-4
-EPOCHS = 1 # Epocas maiores podem levar a overfitting e demorar para treinar.
+EPOCHS = 1 # Epocas maiores podem levar a overfitting e demorar para tr
 
 assert torch.cuda.is_available(), "Erro: GPU não está disponível!"
 print("GPU:", torch.cuda.get_device_name(0))
