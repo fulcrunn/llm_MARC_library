@@ -37,11 +37,11 @@ model.eval()
 # =====================================================
 # 3. DADOS DE TESTE INÉDITOS
 # =====================================================
-titulo_teste = "Gestão socio ambiental no Brasil: Uma análise ecocêntrica"
-autor_teste = "Rodrigo Berté"
-ano_teste = "2013"
-edicao_teste = ""
-imprenta_teste = " Curitiba:Intersaberes"
+titulo_teste = "Statistical prediction and machine learning"
+autor_teste = "John Tuhao Chen, Lincy Y. Chen, Clement Lee"
+ano_teste = "2024"
+edicao_teste = "1º"
+imprenta_teste = " Boca Raton:CRC Press"
 
 prompt = f"""<|im_start|>user
 Voce e um catalogador profissional do SiBi/UFPR e deve seguir **rigorosamente** o Manual de Catalogacao do SiBi/UFPR versao 2025.
