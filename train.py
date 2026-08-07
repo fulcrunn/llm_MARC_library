@@ -22,8 +22,8 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
 
 MAX_SEQ_LENGTH = 512
 # 🚀 DOBRAMOS O BATCH SIZE: Vamos saturar os 48GB da A6000!
-BATCH_SIZE = 4        
-GRAD_ACC = 2           
+BATCH_SIZE = 1        
+GRAD_ACC = 8           
 LR = 2e-4
 EPOCHS = 1 # Epocas maiores podem levar a overfitting e demorar para tr
 
@@ -69,9 +69,9 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation="sdpa" 
 )
 
-model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 # 🚀 DESATIVADO: Como temos muita VRAM, trocamos memória por velocidade bruta
-# model.gradient_checkpointing_enable() 
+model.gradient_checkpointing_enable() 
 model.config.use_cache = False
 
 # =====================================================
