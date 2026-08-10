@@ -10,14 +10,15 @@ from io import StringIO
 from pymarc import parse_xml_to_array
 
 # ==================== CONFIG ====================
-MARC_FOLDER = '/workspace/inputs'
-PDF_FOLDER  = '/workspace/pdfs/'
+MARC_FOLDER = '/programas/llm_MARC_library/datasetsUnzip'
+#MARC_FOLDER = '/workspace/inputs'
+PDF_FOLDER  = '~/programas/llm_MARC_library/datasetsUnzip'
 #DOC_FOLDER  = '/dataset/docs_catalogacao/'
-OUTPUT_JSONL = '/workspace/outputs/train_dataset.jsonl'
+OUTPUT_JSONL = '~/programas/llm_MARC_library/datasetsUnzip/train_dataset.jsonl'
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
-MAX_RECORDS = 50000   
+MAX_RECORDS = 5000000   
 # ===============================================
 data = []
 
