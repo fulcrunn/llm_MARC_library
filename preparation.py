@@ -8,13 +8,14 @@ from tqdm import tqdm
 import random
 from io import StringIO
 from pymarc import parse_xml_to_array
+import pymupdf
 
 # ==================== CONFIG ====================
-MARC_FOLDER = '/programas/llm_MARC_library/datasetsUnzip'
-#MARC_FOLDER = '/workspace/inputs'
-PDF_FOLDER  = '~/programas/llm_MARC_library/datasetsUnzip'
-#DOC_FOLDER  = '/dataset/docs_catalogacao/'
-OUTPUT_JSONL = '~/programas/llm_MARC_library/datasetsUnzip/train_dataset.jsonl'
+MARC_FOLDER = os.path.expanduser('~/programas/llm_MARC_library/datasetsUnzip')
+PDF_FOLDER = os.path.expanduser('~/programas/llm_MARC_library/datasetsUnzip')
+OUTPUT_JSONL = os.path.expanduser(
+    '~/programas/llm_MARC_library/datasetsUnzip/train_dataset.jsonl'
+)
 # ================================================
 
 # Limite para teste (ex: processe só 50k registros primeiro)
